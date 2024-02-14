@@ -14,7 +14,7 @@ new_server_state(ServerAtom) ->
 
 % Handles all the requests (later - do several ones for the different kinds of requests)
 server_handler(state, response) ->
-    not_implemented.
+    defaultmessage.
 
 % Start a new server process with the given name
 % Do not change the signature of this function.
