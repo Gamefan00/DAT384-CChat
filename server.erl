@@ -48,7 +48,8 @@ channel_handler(Ch_st, {join, Client}) ->
             {reply, {error, user_already_joined, "User already joined"}, Ch_st};
         false ->
             {reply, ok, Ch_st#channel_st{members = MembersOfCh ++ [Client]}}
-    end;
+    end.
+
 
 % Handles join request
 % parameters: the current state of the server, and the request data from client 
