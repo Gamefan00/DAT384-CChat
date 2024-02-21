@@ -30,7 +30,14 @@ initial_state(Nick, GUIAtom, ServerAtom) ->
 handle(St, {join, Channel}) ->
     % TODO: Implement this function
     % {reply, ok, St} ;
-    {reply, {error, not_implemented, "join not implemented"}, St} ;
+    % {reply, {error, not_implemented, "join not implemented"}, St} ;
+    Response = (catch gen_server:request(St#client_st.server, {join, self(), Channel})),
+    case Response of
+        {'EXIT',_}      -> {reply, {error, server_not_reached, "The server has been stopped"}, St};
+        timeout_error   -> {reply, {error, server_not_reached, "Server is unresponsive or has timed out"}, St};
+        Other           -> {reply, Response, St}
+    end;
+
 
 % Leave channel
 handle(St, {leave, Channel}) ->
