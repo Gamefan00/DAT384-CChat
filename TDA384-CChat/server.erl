@@ -12,23 +12,29 @@ start(ServerAtom) ->
     gen_server:start(ServerAtom,initial_state, handle).
     
     -record(server_st, {
-        cID, % ID of channel
         server, % Atom of server
-        cNames = [] % atom of the chat serve
-
+        cNames = [], % Name of all active channels
+        uNicks = [] % Current Nicks of active users
     }).
-initial_state(ServerAtom, CID, CNames) ->
+initial_state(ServerAtom, CNames, UNicks) ->
     #server_st{
         server = ServerAtom,
-        cID = CID,
-        cNames = CNames
+        cNames = CNames,
+        uNicks = UNicks
     }.
 
-handle_req(St {join, UID, CName, UNick}) ->
-    case CName of
-        member(CName, )
-        
+handle_req(St, {join, UID, CName, UNick}) ->
     
+       if 
+        member(CName,#server_st.cNames) ->
+            
+
+        true ->
+            
+            %Start a new channel process
+
+       end.
+        
 
 
 
@@ -38,3 +44,4 @@ stop(ServerAtom) ->
     % TODO Implement function
     % Return ok
     not_implemented.
+
