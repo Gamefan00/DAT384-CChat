@@ -41,6 +41,10 @@ stop(ServerAtom) ->
     genserver:stop(ServerAtom).
 
 %%%%%%%%%%%%%%%% channel handlers %%%%%%%%%%%%%%%%%%%%%%%%%
+% Several functions to handle the channels' requests. 
+% Parameters are Ch_st which is the current state of the channel, and the request data
+% Returns a tuple {reply, DataSent, ChNewState}. What is sent to the Client/Server
+% is what is in the DataSent. The updated state for the channel is ChNewState
 
 % Handler for join requests for channel 
 channel_handler(Ch_st, {join, Client}) ->
@@ -51,12 +55,27 @@ channel_handler(Ch_st, {join, Client}) ->
             {reply, {error, user_already_joined, "User already joined"}, Ch_st};
         false ->
             {reply, ok, Ch_st#channel_st{members = MembersOfCh ++ [Client]}}
-    end.
+    end;
+
+% Handler for leaving a channel
+channel_handler(Ch_st, {leave, Client}) ->
+    Members = Ch_st#channel_st.members,
+    % Checks if the user is actually in the channel, ie a member.
+    % If it is a member it should be removed, and otherwise not
+    case lists:member(Client, Members) of
+        true ->
+            {reply, ok, Ch_st#channel_st{members = lists:delete(Client, Members)}};
+        false -> 
+            {reply, {error, user_not_joined, "The user is not a member of this channel"}, Ch_st}
+     end.
 
 %%%%%%%%%%%%%%% server handlers %%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Functions for handling the server requests. These requests are from the clients
+% The parameters are St, which is the current state of the server, and request data
+% Returns a tuple {reply, DataSent, ServerNewState}. What is sent to the Client
+% is what is in the DataSent. The updated state for the server is ServerNewState
 
 % Handles join request
-% parameters: the current state of the server, and the request data from client 
 server_handler(St, {join, Client, Channel}) ->
     Channels = St#server_st.channel_list, % get all the channels 
     % If the channel already exists, just join the channel. Otherwise
