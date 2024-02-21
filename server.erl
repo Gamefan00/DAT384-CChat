@@ -67,7 +67,24 @@ channel_handler(Ch_st, {leave, Client}) ->
             {reply, ok, Ch_st#channel_st{members = lists:delete(Client, Members)}};
         false -> 
             {reply, {error, user_not_joined, "The user is not a member of this channel"}, Ch_st}
-     end.
+     end;
+
+% Handler for message requests
+channel_handler(Ch_st, {message_send, Message, Nick, SenderPid}) ->
+    ChannelMembers = Ch_st#channel_st.members,
+    Channel = Ch_st#channel_st.id,
+    % You can only send a msg if you are a member of the channel, 
+    % so here membership is checked. If you are a member, all the other
+    % members in the channel should get your msg. Otherwise error handling is done
+    case lists:member(SenderPid, ChannelMembers) of
+        true ->
+            [spawn(genserver, request, [Reciever, {message_recieve, Channel, Nick, Message}])
+                || Reciever <- ChannelMembers, Reciever =/= SenderPid],
+            {reply, ok, Ch_st};
+        false ->
+            {reply, {error, user_not_joined, "The user is not a member of the channel"}, Ch_st}
+    end.
+
 
 %%%%%%%%%%%%%%% server handlers %%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Functions for handling the server requests. These requests are from the clients

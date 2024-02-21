@@ -32,6 +32,7 @@ handle(St, {join, Channel}) ->
     % {reply, ok, St} ;
     % {reply, {error, not_implemented, "join not implemented"}, St} ;
     Response = (catch gen_server:request(St#client_st.server, {join, self(), Channel})),
+    %% TODO    SOMETHING IS WRONG HERE, OFTEN GETS STUCK IN THE EXIT THING ??!!
     case Response of
         {'EXIT',_}      -> {reply, {error, server_not_reached, "The server has been stopped"}, St};
         timeout_error   -> {reply, {error, server_not_reached, "Server is unresponsive or has timed out"}, St};
@@ -43,13 +44,22 @@ handle(St, {join, Channel}) ->
 handle(St, {leave, Channel}) ->
     % TODO: Implement this function
     % {reply, ok, St} ;
-    {reply, {error, not_implemented, "leave not implemented"}, St} ;
+    % {reply, {error, not_implemented, "leave not implemented"}, St} ;
+    % TODO do we need to handle errors here or are they fixed in server?
+    Response = genserver:request(list_to_atom(Channel), {leave, self()}),
+    {reply, Response, St};
 
 % Sending message (from GUI, to channel)
 handle(St, {message_send, Channel, Msg}) ->
     % TODO: Implement this function
     % {reply, ok, St} ;
-    {reply, {error, not_implemented, "message sending not implemented"}, St} ;
+    % {reply, {error, not_implemented, "message sending not implemented"}, St} ;
+    Response = (catch genserver:request(list_to_atom(Channel), {message_send, Msg, St#client_st.nick, self()})),
+    % need to handle if the server has already been shut down
+    case Response of 
+        {'EXIT', _}     -> {reply, {error, server_not_reached, "Doesn't get any response from server"}, St};
+        Other           -> {reply, Response, St}
+    end;
 
 % This case is only relevant for the distinction assignment!
 % Change nick (no check, local only)
