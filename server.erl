@@ -37,7 +37,10 @@ start(ServerAtom) ->
 stop(ServerAtom) ->
     % TODO Implement function
     % Return ok
-    not_implemented.
+    genserver:request(ServerAtom, close_channels),
+    genserver:stop(ServerAtom).
+
+%%%%%%%%%%%%%%%% channel handlers %%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Handler for join requests for channel 
 channel_handler(Ch_st, {join, Client}) ->
@@ -50,6 +53,7 @@ channel_handler(Ch_st, {join, Client}) ->
             {reply, ok, Ch_st#channel_st{members = MembersOfCh ++ [Client]}}
     end.
 
+%%%%%%%%%%%%%%% server handlers %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Handles join request
 % parameters: the current state of the server, and the request data from client 
@@ -65,4 +69,10 @@ server_handler(St, {join, Client, Channel}) ->
         false -> 
             spawn(genserver, start, [list_to_atom(Channel), initial_channel_state(Channel, Client), fun channel_handler/2]),
             {reply, ok, St#server_st{channel_list = Channels ++ [Channel]}}
-    end.
+    end;
+
+% handles shut down request, and stops all processes for the channels
+server_handler(St, close_channels) ->
+    lists:foreach(fun(Channel) -> genserver:stop(list_to_atom(Channel)) end, St#server_st.channel_list),
+    {reply, ok, St#server_st{channel_list = []}}.
+
