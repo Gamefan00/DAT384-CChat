@@ -110,7 +110,7 @@ server_handler(St, close_channels) ->
     lists:foreach(fun(Channel) -> genserver:stop(list_to_atom(Channel)) end, St#server_st.channel_list),
     {reply, ok, St#server_st{channel_list = []}};
 
-% Handles request to change nick
+% Handles request to change nick (note! only started the distinction assignment, didn't get it to work)
 server_handler(St, {nick, NewNick}) ->
     case is_nick_taken(St, NewNick) of
         true ->

@@ -40,7 +40,6 @@ handle(St, {join, Channel}) ->
 % Leave channel
 handle(St, {leave, Channel}) ->
     % TODO: Implement this function
-    % TODO do we need to handle errors here or are they fixed in server?
     Response = (catch genserver:request(list_to_atom(Channel), {leave, self()})),
     case Response of 
         {'EXIT', _}     -> {reply, {error, user_not_joined, "User is not a participant of that channel"}, St};
@@ -59,7 +58,7 @@ handle(St, {message_send, Channel, Msg}) ->
 
 % This case is only relevant for the distinction assignment!
 % Change nick (no check, local only)
-% TODO - started with this one 
+% TODO - only started with this one 
 handle(St, {nick, NewNick}) ->
     % check if nick is already taken
     Response = (catch genserver:request(St#client_st.server, {nick, NewNick})),
