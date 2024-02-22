@@ -30,11 +30,10 @@ initial_state(Nick, GUIAtom, ServerAtom) ->
 handle(St, {join, Channel}) ->
     % TODO: Implement this function
     Response = (catch genserver:request(St#client_st.server, {join, self(), Channel})),
-    %% TODO    SOMETHING IS WRONG HERE, OFTEN GETS STUCK IN THE EXIT THING ??!!
     case Response of
-        {'EXIT',_}      -> {reply, {error, server_not_reached, "The server has been stopped"}, St};
-        timeout_error   -> {reply, {error, server_not_reached, "Server is unresponsive or has timed out"}, St};
-        Other           -> {reply, Response, St}
+        {'EXIT',_}          -> {reply, {error, server_not_reached, "The server has been stopped"}, St};
+        timeout_error       -> {reply, {error, server_not_reached, "Server is unresponsive or has timed out"}, St};
+        Other               -> {reply, Response, St}
     end;
 
 
@@ -60,8 +59,16 @@ handle(St, {message_send, Channel, Msg}) ->
 
 % This case is only relevant for the distinction assignment!
 % Change nick (no check, local only)
+% TODO - started with this one 
 handle(St, {nick, NewNick}) ->
-    {reply, ok, St#client_st{nick = NewNick}} ;
+    % check if nick is already taken
+    Response = (catch genserver:request(St#client_st.server, {nick, NewNick})),
+    case Response of
+        {error, nick_taken, _Explanation} ->
+            {reply, {error, nick_taken, "Nick already taken"}, St};
+        Other ->
+            {reply, ok, St#client_st{nick = NewNick}}
+    end;    
 
 % ---------------------------------------------------------------------------
 % The cases below do not need to be changed...

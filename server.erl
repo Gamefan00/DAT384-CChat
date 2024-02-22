@@ -30,19 +30,17 @@ start(ServerAtom) ->
     % - Register this process to ServerAtom
     % - Return the process ID
     spawn(genserver, start, [ServerAtom, initial_server_state(ServerAtom), fun server_handler/2]).
-    %not_implemented.
 
 % Stop the server process registered to the given name,
 % together with any other associated processes
 stop(ServerAtom) ->
     % TODO Implement function
-    % Return ok
     genserver:request(ServerAtom, close_channels),
     genserver:stop(ServerAtom).
 
 %%%%%%%%%%%%%%%% channel handlers %%%%%%%%%%%%%%%%%%%%%%%%%
 % Several functions to handle the channels' requests. 
-% Parameters are Ch_st which is the current state of the channel, and the request data
+% Parameters are Ch_st, which is the current state of the channel, and the request data
 % Returns a tuple {reply, DataSent, ChNewState}. What is sent to the Client/Server
 % is what is in the DataSent. The updated state for the channel is ChNewState
 
@@ -110,5 +108,19 @@ server_handler(St, {join, Client, Channel}) ->
 % handles shut down request, and stops all processes for the channels
 server_handler(St, close_channels) ->
     lists:foreach(fun(Channel) -> genserver:stop(list_to_atom(Channel)) end, St#server_st.channel_list),
-    {reply, ok, St#server_st{channel_list = []}}.
+    {reply, ok, St#server_st{channel_list = []}};
 
+% Handles request to change nick
+server_handler(St, {nick, NewNick}) ->
+    case is_nick_taken(St, NewNick) of
+        true ->
+            {reply, {error, nick_taken, "Nick already taken"}, St};
+        false ->
+            {reply, ok, St}
+    end.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%% Helper method %%%%%%%%%%%%%%%%%%%%
+% checks if the nick is already taken
+is_nick_taken(St, NewNick) ->
+    lists:member(NewNick, St#server_st.nick_list).
