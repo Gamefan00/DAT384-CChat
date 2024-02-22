@@ -78,8 +78,8 @@ channel_handler(Ch_st, {message_send, Message, Nick, SenderPid}) ->
     % members in the channel should get your msg. Otherwise error handling is done
     case lists:member(SenderPid, ChannelMembers) of
         true ->
-            [spawn(genserver, request, [Reciever, {message_recieve, Channel, Nick, Message}])
-                || Reciever <- ChannelMembers, Reciever =/= SenderPid],
+            [spawn(genserver, request, [Receiver, {message_receive, Channel, Nick, Message}])
+                || Receiver <- ChannelMembers, Receiver =/= SenderPid],
             {reply, ok, Ch_st};
         false ->
             {reply, {error, user_not_joined, "The user is not a member of the channel"}, Ch_st}

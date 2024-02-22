@@ -29,9 +29,7 @@ initial_state(Nick, GUIAtom, ServerAtom) ->
 % Join channel
 handle(St, {join, Channel}) ->
     % TODO: Implement this function
-    % {reply, ok, St} ;
-    % {reply, {error, not_implemented, "join not implemented"}, St} ;
-    Response = (catch gen_server:request(St#client_st.server, {join, self(), Channel})),
+    Response = (catch genserver:request(St#client_st.server, {join, self(), Channel})),
     %% TODO    SOMETHING IS WRONG HERE, OFTEN GETS STUCK IN THE EXIT THING ??!!
     case Response of
         {'EXIT',_}      -> {reply, {error, server_not_reached, "The server has been stopped"}, St};
@@ -52,8 +50,6 @@ handle(St, {leave, Channel}) ->
 % Sending message (from GUI, to channel)
 handle(St, {message_send, Channel, Msg}) ->
     % TODO: Implement this function
-    % {reply, ok, St} ;
-    % {reply, {error, not_implemented, "message sending not implemented"}, St} ;
     Response = (catch genserver:request(list_to_atom(Channel), {message_send, Msg, St#client_st.nick, self()})),
     % need to handle if the server has already been shut down
     case Response of 
