@@ -41,11 +41,12 @@ handle(St, {join, Channel}) ->
 % Leave channel
 handle(St, {leave, Channel}) ->
     % TODO: Implement this function
-    % {reply, ok, St} ;
-    % {reply, {error, not_implemented, "leave not implemented"}, St} ;
     % TODO do we need to handle errors here or are they fixed in server?
-    Response = genserver:request(list_to_atom(Channel), {leave, self()}),
-    {reply, Response, St};
+    Response = (catch genserver:request(list_to_atom(Channel), {leave, self()})),
+    case Response of 
+        {'EXIT', _}     -> {reply, {error, user_not_joined, "User is not a participant of that channel"}, St};
+        Other           -> {reply, Response, St}
+    end;
 
 % Sending message (from GUI, to channel)
 handle(St, {message_send, Channel, Msg}) ->
